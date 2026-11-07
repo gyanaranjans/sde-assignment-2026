@@ -20,6 +20,8 @@ import datetime as dt
 import json
 import time
 
+import httpx
+
 FEATS = ("lang", "city_tier", "age_band", "value_band")
 EXP_DIMS = ("welcome_message", "voice")
 
@@ -32,7 +34,13 @@ class Ingestor:
         self.idx: dict[tuple, dict] = {}
         for key, v in self.counters.items():
             self.idx.setdefault(key[:2], {})[key[2:]] = v
-        self.persons: dict[str, tuple] = {p: tuple(f.split("|")) for p, f in store.load_persons().items()}
+        # ~2M people at load scale: feature tuples are interned (a few hundred distinct combos) so each person
+        # costs one dict slot + its id string, not five fresh strings
+        self._tuples: dict[tuple, tuple] = {}
+        self.persons: dict[str, tuple] = {}
+        for p, f in store.load_persons().items():
+            t = tuple(f.split("|"))
+            self.persons[p] = self._tuples.setdefault(t, t)
         self.d0 = dt.date.fromisoformat(store.get("d0_date"))
         self._daycache: dict[str, str] = {}
         self.events_total = 0
@@ -65,10 +73,20 @@ class Ingestor:
         return n_ev, control, time.time() - t0
 
     def _ingest_chunk(self, n: int):
+        for attempt in range(8):
+            try:
+                return self._ingest_chunk_once(n)
+            except httpx.TransportError as e:
+                self.log("warn", "chunk_stream_retry", chunk=n, error=str(e), attempt=attempt)
+                time.sleep(min(2 ** attempt * 0.5, 15))
+        raise RuntimeError(f"chunk {n}: simulator unavailable")
+
+    def _ingest_chunk_once(self, n: int):
         delta: dict[tuple, list] = {}
         C = self.counters
         persons_new, campaigns, versions, control = [], [], [], []
         P = self.persons
+        staged: dict[str, tuple] = {}  # people first seen in this chunk; merged into P only after commit
 
         def inc(key, a, b):
             d = delta.get(key)
@@ -78,11 +96,12 @@ class Ingestor:
                 d[0] += a
                 d[1] += b
 
-        lines = self.api.chunk_lines(n)
         loads = json.loads
-        for line in lines:
+        n_lines = 0
+        for line in self.api.stream_chunk(n):
             if not line:
                 continue
+            n_lines += 1
             ev = loads(line)
             t = ev["type"]
             if t == "call":
@@ -94,7 +113,7 @@ class Ingestor:
                 eng = ev["engaged"]
                 c, e = int(conn), int(eng)
                 var = ev["variant"]
-                f = P.get(ev["person_id"])
+                f = P.get(ev["person_id"]) or staged.get(ev["person_id"])
                 inc(("pk", wf, day), 1, c)
                 inc(("did", wf, var["caller_id"], day, hour), 1, c)
                 for dim in EXP_DIMS:
@@ -116,10 +135,11 @@ class Ingestor:
                     inc(("cc", wf, str(int(day) - ev["campaign_day_index"])), 0, 1)
             elif t == "lead":
                 pid = ev["person_id"]
-                if pid not in P:
+                if pid not in P and pid not in staged:
                     fe = ev["features"]
                     tup = tuple(fe[k] for k in FEATS) + (ev["workflow_id"],)
-                    P[pid] = tup
+                    tup = self._tuples.setdefault(tup, tup)
+                    staged[pid] = tup
                     persons_new.append((pid, "|".join(tup)))
             elif t == "campaign_created":
                 campaigns.append((ev["campaign_id"], ev["workflow_id"], int(self._day(ev["ts"])), ev["leads"],
@@ -133,6 +153,7 @@ class Ingestor:
             elif t == "approval_decided":
                 control.append(ev)
         self.store.commit_chunk(n, delta, persons_new, campaigns, versions)
+        P.update(staged)
         for k, v in delta.items():
             cur = C.get(k)
             if cur is None:
@@ -141,4 +162,4 @@ class Ingestor:
             else:
                 cur[0] += v[0]
                 cur[1] += v[1]
-        return len(lines), control
+        return n_lines, control

@@ -46,16 +46,10 @@ class Api:
             raise RuntimeError(f"{method} {path} -> {s} {d}")
         return d
 
-    def chunk_lines(self, n: int):
-        """Streams a chunk without materialising it twice in memory."""
-        delay = 0.5
-        for _ in range(8):
-            try:
-                with self.c.stream("GET", f"/events/chunks/{n}") as r:
-                    if r.status_code != 200:
-                        raise RuntimeError(f"chunk {n} -> {r.status_code}")
-                    return r.read().splitlines()
-            except httpx.TransportError:
-                time.sleep(delay)
-                delay = min(delay * 2, 15)
-        raise RuntimeError(f"chunk {n}: simulator unavailable")
+    def stream_chunk(self, n: int):
+        """Yields a chunk's lines as they arrive (bounded memory). The caller must treat a transport error as
+        'restart this chunk from scratch' — nothing is committed until the whole chunk is read."""
+        with self.c.stream("GET", f"/events/chunks/{n}") as r:
+            if r.status_code != 200:
+                raise RuntimeError(f"chunk {n} -> {r.status_code}")
+            yield from r.iter_lines()
