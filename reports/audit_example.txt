@@ -1,0 +1,205 @@
+$ python -m controller.audit --db state/public_02/controller.db why ks_cancel "D3 21:00"
+{
+  "live_version": 10,
+  "changed_at": "D3 16:00",
+  "actor": "controller_approved",
+  "changed_dims": [
+    "cohorts",
+    "voice",
+    "schedule"
+  ],
+  "proposal": {
+    "proposal_id": "ctl-public_02_incidents-ks_cancel-routine-5160-17",
+    "path": "approval",
+    "summary": "3 cohorts; voice: promote winners; call-time weights per cohort",
+    "proposed_at": "D3 14:00",
+    "approval_id": "apr_00009",
+    "impact_score": 0.07,
+    "affected_leads": 3583,
+    "dry_run": {
+      "engagement_rel_change": 0.0022,
+      "by_dim": {
+        "welcome_message": 0.0,
+        "voice": 0.0022
+      },
+      "pickup_rel_change_from_caller_id": 0.0,
+      "share_of_people_affected": 1.0,
+      "method": "replay of the most recent dialled population against per-segment lifts measured on live calls since exploration began (shrunk m=200); untested options assumed neutral",
+      "active_leads": 3583,
+      "people_sampled": 4000
+    },
+    "rationale": "[#58] voice: age_band=31-45\u2192V4 (+26.3%, z=2.797); est. engagement gain \u2265+6.4% (80% LB)",
+    "diff": {
+      "cohorts": {
+        "before": [
+          "age_band=31-45+46-60+60+",
+          "age_band=18-30"
+        ],
+        "after": [
+          {
+            "id": "age_band=46-60+60+",
+            "where": {
+              "age_band": [
+                "46-60",
+                "60+"
+              ]
+            }
+          },
+          {
+            "id": "age_band=31-45",
+            "where": {
+              "age_band": [
+                "31-45"
+              ]
+            }
+          },
+          {
+            "id": "age_band=18-30",
+            "where": {
+              "age_band": [
+                "18-30"
+              ]
+            }
+          }
+        ]
+      },
+      "voice": {
+        "age_band=18-30": {
+          "before": {
+            "V1": 0.4,
+            "V2": 0.2,
+            "V3": 0.2,
+            "V4": 0.2
+          },
+          "after": {
+            "V1": 1.0
+          }
+        },
+        "age_band=31-45": {
+          "before": {
+            "V1": 0.4,
+            "V2": 0.2,
+            "V3": 0.2,
+            "V4": 0.2
+          },
+          "after": {
+            "V1": 0.2,
+            "V4": 0.8
+          }
+        },
+        "age_band=46-60+60+": {
+          "before": {
+            "V1": 0.4,
+            "V2": 0.2,
+            "V3": 0.2,
+            "V4": 0.2
+          },
+          "after": {
+            "V1": 1.0
+          }
+        },
+        "default": {
+          "before": {
+            "V1": 0.4,
+            "V2": 0.2,
+            "V3": 0.2,
+            "V4": 0.2
+          },
+          "after": {
+            "V1": 1.0
+          }
+        }
+      },
+      "schedule.hour_weights": {
+        "after": {
+          "age_band=46-60+60+": {
+            "9": 1.246,
+            "10": 1.163,
+            "11": 1.323,
+            "12": 1.301,
+            "13": 1.289,
+            "14": 1.09,
+            "15": 0.751,
+            "16": 0.747,
+            "17": 0.848,
+            "18": 0.8,
+            "19": 0.893,
+            "20": 0.712
+          },
+          "age_band=31-45": {
+            "9": 1.246,
+            "10": 1.163,
+            "11": 1.323,
+            "12": 1.301,
+            "13": 1.289,
+            "14": 1.09,
+            "15": 0.751,
+            "16": 0.747,
+            "17": 0.848,
+            "18": 0.8,
+            "19": 0.893,
+            "20": 0.712
+          },
+          "age_band=18-30": {
+            "9": 0.63,
+            "10": 0.754,
+            "11": 0.977,
+            "12": 0.96,
+            "13": 1.066,
+            "14": 0.908,
+            "15": 0.846,
+            "16": 0.966,
+            "17": 1.233,
+            "18": 1.361,
+            "19": 1.33,
+            "20": 1.106
+          }
+        }
+      }
+    }
+  },
+  "approval": {
+    "status": "approved",
+    "decided_at": "2027-01-07T15:39:00+05:30",
+    "approver": "ks_cancel client approver (governance policy)"
+  },
+  "evidence": [
+    {
+      "id": 58,
+      "at": "D3 13:00",
+      "kind": "winner_selected",
+      "summary": "voice: age_band=31-45\u2192V4 (+26.3%, z=2.797); est. engagement gain \u2265+6.4% (80% LB)"
+    }
+  ],
+  "kpis_before_after": [
+    {
+      "day": "D2",
+      "dials": 4800,
+      "pickup": 0.2421,
+      "engagement": 0.5052
+    },
+    {
+      "day": "D3",
+      "dials": 4800,
+      "pickup": 0.2627,
+      "engagement": 0.4814
+    },
+    {
+      "day": "D4",
+      "dials": 4800,
+      "pickup": 0.2633,
+      "engagement": 0.4953
+    },
+    {
+      "day": "D5",
+      "dials": 4800,
+      "pickup": 0.256,
+      "engagement": 0.5004
+    }
+  ],
+  "what_happened_next_48h": [
+    "D3 18:00 incident_resolved: flag rate on P1 back to 1.1% over 347 calls (opened D3 13:00, MTTR 5.0h)",
+    "D5 11:00 decay_rollback: voice age_band=31-45: V4 stopped winning (vs holdout z=-0.92, vs own exploration-time rate z=-3.77, control drift z=0.11) \u2014 back to V1",
+    "D5 13:00 applied: applied apr_00014 as v11: 2 cohorts; voice: end test, back to control; call-time weights per cohort"
+  ]
+}

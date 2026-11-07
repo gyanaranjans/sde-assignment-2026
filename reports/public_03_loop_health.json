@@ -1,0 +1,63 @@
+{
+  "steps": 120,
+  "events_ingested": 4200153,
+  "ingest_events_per_s": 213781,
+  "wall_s_total": 47.2,
+  "decide_s_total": 2.4,
+  "max_decide_s_per_step": 0.24,
+  "peak_rss_mb": 248,
+  "credits_remaining": 400.0,
+  "per_sim_day": [
+    {
+      "day": 0,
+      "events": 840062,
+      "wall_s": 8.6,
+      "ingest_s": 3.8
+    },
+    {
+      "day": 1,
+      "events": 840025,
+      "wall_s": 9.1,
+      "ingest_s": 3.8
+    },
+    {
+      "day": 2,
+      "events": 840040,
+      "wall_s": 10.9,
+      "ingest_s": 4.2
+    },
+    {
+      "day": 3,
+      "events": 840014,
+      "wall_s": 9.4,
+      "ingest_s": 3.9
+    },
+    {
+      "day": 4,
+      "events": 840012,
+      "wall_s": 9.2,
+      "ingest_s": 3.9
+    },
+    {
+      "day": 5,
+      "events": 0,
+      "wall_s": 0.0,
+      "ingest_s": 0.0
+    }
+  ],
+  "decisions_by_kind": {
+    "approval_requested": 37,
+    "approval_approved": 33,
+    "applied": 33,
+    "did_plan": 27,
+    "winner_selected": 24,
+    "explore_planned": 24,
+    "explore_live": 24,
+    "auto_applied": 23,
+    "schedule_planned": 12,
+    "arm_dropped": 5,
+    "did_flagged": 4,
+    "approval_rejected": 4
+  },
+  "alerts": []
+}

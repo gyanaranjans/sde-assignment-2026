@@ -7,8 +7,8 @@ Governance rules this file enforces (see SUBMISSION.md §6):
     a 'submitting' row is reconciled against GET /approvals (or config history for auto-apply), so nothing is
     double-submitted, double-applied or forgotten.
   * At most one routine approval and one urgent (incident) approval in flight per workflow.
-  * Routine requests: only inside approver hours and not before 11:00; one request slot per 24h is reserved
-    for incidents.
+  * Routine requests: only inside approver hours, not before 11:00, at most 2 per 24h; one request slot per
+    24h is always reserved for incidents.
   * Auto-apply is used voluntarily only for operational dims (caller_id, schedule) even where the policy allows
     more; customer-facing changes always get a named human. Steps respect max_shift.
   * Never auto-apply while an approval is in flight (it would stale the approval) unless a caller ID is
@@ -38,6 +38,7 @@ VALIDATION_N = 500
 CREDIT_FLOOR_SHARE = 0.15       # keep this share of the budget for the next incident
 ROUTINE_EARLIEST_HOUR = 11      # Kestrel ops standups; harmless for Northwind
 REJECT_BACKOFF_MIN = 180
+ROUTINE_MAX_PER_24H = 2         # approver attention: ≤2 routine asks/day even where policy allows more
 
 
 def log(level, kind, **kw):
@@ -157,7 +158,7 @@ class Controller:
                 return
             if set(dims) <= auto_dims:
                 return  # operational-only: wait for the in-flight approval instead of spending approver attention
-        if inflight["routine"] or not routine_window:
+        if inflight["routine"] or not routine_window or (b.st["incident"] or {}).get("status") == "open":
             return
         last_rej = self.store.db.execute(
             "SELECT MAX(updated_min) FROM proposals WHERE wf=? AND status IN ('rejected','expired','lapsed','stale')",
@@ -165,7 +166,7 @@ class Controller:
         if last_rej is not None and self.now_min - last_rej < REJECT_BACKOFF_MIN:
             return
         reserve = 1 if gov["max_requests_per_24h"] >= 2 else 0
-        if self.requests_24h(wid) >= gov["max_requests_per_24h"] - reserve:
+        if self.requests_24h(wid) >= min(gov["max_requests_per_24h"] - reserve, ROUTINE_MAX_PER_24H):
             return
         self.submit_approval(wid, cfg, ver, target, kind="routine")
 
@@ -301,6 +302,13 @@ class Controller:
                                   f"{p['approval_id']} ({p['summary']}) → {a['status']}",
                                   approval=a, proposal_id=pid)
                 p["status"] = a["status"]
+            if p["status"] == "approved" and p["kind"] != "urgent" and \
+                    any(u["status"] in ("pending", "approved") for u in self.inflight(wid)["urgent"]):
+                # applying this would stale the incident fix; the fix wins, this one is re-proposed later
+                if not p.get("_deferred_logged"):
+                    self.store.decide(self.now_min, fmt(self.now_min), wid, "apply_deferred",
+                                      f"holding {p['approval_id']} so the pending incident fix can apply cleanly")
+                continue
             if p["status"] == "approved":
                 s, r = self.api.post(f"/workflows/{wid}/apply", {"approval_id": p["approval_id"]})
                 if s == 200:
@@ -332,7 +340,7 @@ class Controller:
         rows = self.store.db.execute(
             "SELECT id, ts, kind, summary FROM decisions WHERE wf=? AND minute>=? AND kind IN "
             "('schedule_planned','explore_planned','winner_selected','experiment_concluded','decay_rollback',"
-            "'arm_dropped','did_plan','did_flagged','incident_opened','validation','supervisor_edit') ORDER BY id",
+            "'arm_dropped','did_plan','did_flagged','supervisor_edit') ORDER BY id",
             (wid, last)).fetchall()
         return rows[-12:]
 

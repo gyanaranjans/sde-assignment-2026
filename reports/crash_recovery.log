@@ -1,0 +1,40 @@
+kill #1 at 2027-01-04T13:00:00+05:30
+kill #2 at 2027-01-05T15:00:00+05:30
+kill #3 at 2027-01-06T17:00:00+05:30
+kill #4 at 2027-01-07T09:00:00+05:30
+kill #5 at 2027-01-08T11:00:00+05:30
+kill #6 at 2027-01-09T11:00:00+05:30
+kill #7 at 2027-01-10T11:00:00+05:30
+kill #8 at 2027-01-11T15:00:00+05:30
+kill #9 at 2027-01-13T09:00:00+05:30
+kill #10 at 2027-01-13T23:00:00+05:30
+final run finished: {"scenario":"public_02_incidents","sim_minute":14400,"ts":"2027-01-14T00:00:00+05:30","end_minute":14400,"finished":true,"tick_minutes":15,"credits_remaining":195.0,"chunks":132,"last_event_id":324324}
+{
+  "restarts_recorded": 10,
+  "dials_truth": {
+    "nw_renewal": 84800,
+    "ks_cancel": 113009,
+    "nw_kyc": 47199
+  },
+  "dials_ours": {
+    "nw_renewal": 84800,
+    "ks_cancel": 113009,
+    "nw_kyc": 47199
+  },
+  "approved": 14,
+  "applied": 14,
+  "stale_apply_conflicts": 0,
+  "checks": {
+    "dials counted exactly once (ours == truth)": true,
+    "no approval applied twice": true,
+    "every approved request applied or provably stale (none lapsed/lost)": true,
+    "no duplicate proposal ids": true
+  }
+}
+| workflow | conclusion rate | Δ | pickup | Δ | engagement | Δ | engagement gap captured | hallucinated calls (base) |
+|---|---|---|---|---|---|---|---|---|
+| ks_cancel | 0.363 | +54.1% | 0.250 | +38.2% | 0.497 | +6.3% | 35% | 94 (348) |
+| nw_kyc | 0.453 | +21.1% | 0.288 | +22.9% | 0.592 | -2.7% | -17% | 38 (29) |
+| nw_renewal | 0.496 | +14.4% | 0.291 | +11.1% | 0.566 | +2.0% | 20% | 70 (54) |
+| ALL | 0.426 | +28.9% | 0.272 | +23.8% | 0.542 | +1.8% | 24% | 202 (431) |
+
