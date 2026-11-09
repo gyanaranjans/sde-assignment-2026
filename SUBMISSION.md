@@ -1,6 +1,6 @@
 # Outcome-First Agent Loop — Submission
 
-**Name:** _(fill in)_ · **Date:** 2026-11-07 · **Hours actually spent:** _(fill in)_ · **Language / storage:** Python 3.11+ (httpx, stdlib `sqlite3`, `statistics`) / one SQLite file (WAL)
+**Name:** Gyanaranjan Sahoo · **Date:** 2026-11-07 · **Hours actually spent:** 4 · **Language / storage:** Python 3.11+ (httpx, stdlib `sqlite3`, `statistics`) / one SQLite file (WAL)
 
 ---
 
